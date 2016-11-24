@@ -30,13 +30,19 @@ line.zipcode ### event zipcode
 
 	{% if message %}
 	<h2>{{message}}, Here are all the upcomming events:</h2>
-	{% end if %}
+	{% endif %}
 
 	{% if not message %}
 	<h2>Upcomming events:</h2>
-	{% end if %}
+	{% endif %}
 
 	<div>
+		<form action="/index-w-interests" method="POST">
+			<input type="text" name="interest-title" placeholder="type your interest here" required/>
+			<input type="submit" value="Filter"/>
+		</form>
+
+		</div>
 		<table class = "generic-table events_table">
 			<th>Title</th>
 			<th>Date</th>
@@ -74,17 +80,26 @@ line.zipcode ### event zipcode
 					<td>line.location</td>
 					<td>line.zipcode</td>
 				</tr>
-			{% end for % }
+			{% endfor % }
 		</table>
 	</div>
 
+	{% if message %}
+	<div>
+		<a href="/upcoming">View upcoming events</a>
+		<a href="/events-of-interest">See events of your interest</a>
+		<a href="/friends-events">See your friend's events</a>
+		<a href="/groups">See your groups</a>
+		<a href="/create-event">Create an Event for your Group!</a>
+	</div>
+	{% endif %}
 	{% if not message %}
 	<div>
 		<h2>Login or register to find more Folks!</h2>
 		<a href="/login">Login</a>
 		<a href="/register">Register</a>
 	</div>
-	{% end if %}
+	{% endif %}
 
 </body>
 </html>
