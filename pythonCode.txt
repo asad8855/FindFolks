@@ -1,0 +1,215 @@
+from flask import Flask, render_template, request, session, url_for, redirect
+import pymysql.cursors
+
+app =Flask(__name__)
+
+conn = pymysql.connect(host='localhost',
+                       user='root',
+                       password='',
+                       db='findfolks',
+                       charset='utf8mb4',
+                       cursorclass=pymysql.cursors.DictCursor)
+
+#Define a route to index
+@app.route('/')
+def index():
+    #events of past 3 days
+    username = session['username']
+    cursor.conn.cursor()
+    queryOne = 'SELECT * FROM an_event WHERE start_time >= cast((now()) as date) AND start_time < cast((now() + interval 3 day) as date)'
+    cursor.execute(queryOne)
+    threeDays = cursor.fetchall()
+    #user can select any interest from what this query returns 
+    queryTwo = 'SELECT category, keyword FROM about'
+    cursor.execute(queryTwo)
+    interestSel = cursor.fetchall()
+    #return groups that share interest with user's selection
+    category = request.form['interest-title']
+    queryThree = 'SELECT * FROM  about NATURUAL JOIN a_group WHERE category = %s'
+    cursor.execute(query, (category))
+    groupMatches = cursor.fetchall()
+    cursor.close()
+    return render_template('index.html', message = username, posts = threeDays, interestSel = interestSel, groupMatches = groupMatches)
+
+#Define route for login
+@app.route('/login')
+def login():
+	return render_template('login.html')
+
+#Define route for loginAuth
+@app.route('/loginAuth', methods =['GET','POST'])
+def loginAuth():
+    #get username and password from html form
+    username = request.form['username']
+    password = request.form['password']
+
+    cursor = conn.connect()
+    query = 'SELECT * FROM member WHERE username = %s AND password = %s'
+    cursor.execute(query,(username,password))
+    data = cursor.fetchone()
+    cursor.close()
+    error = None
+    if(data):
+        #create a session to hold variables that we will need throughout login session
+        session['username'] = username
+        return redirect(url_for('home'))
+    else:
+        #return error message to html page
+        error = 'Invalid login or username'
+        return render_template('login.html', error = error)
+        
+
+
+#Define route for register
+@app.route('/register' , methods=['GET', 'POST'])
+def register():
+    username = request.form['username']
+    password = request.form['password']
+    firstname = request.form['firstname']
+    lastname = request.form['lastname']
+    email = request.form['email']
+    zipcode = request.form['zipcode']
+    #select interests here too  ---------------------------put code here 
+
+    cursor = conn.cursor()
+    query = 'SELECT * FROM member WHERE username = %s'
+    cursor.execute(query,(username))
+    data = cursor.fetchone()
+    error = None
+    if(data):
+        error = "This user already exists"
+        return render_template('register.html', error = error)
+    else:
+        ins = 'INSERT INTO member VALUES (%s,%s,%s,%s,%s,%i)'
+        cursor.execute(ins,(username,password,firstname,lastname,email,zipcode))
+        conn.commit()
+        cursor.close()
+        return render_template('index.html')
+
+@app.route('/home' , methods=['GET', 'POST'])
+def home():
+    username = session['username']
+    #use cases. depending on what the user chooses from these cases, we will redirect them to those url pages
+    cursor = conn.cursor()
+    #USE CASE #1    default 
+    default = 'SELECT * FROM an_event NATURAL JOIN sign_up WHERE start_time >= cast((now()) as date) AND start_time < cast((now() + interval 3 day) as date) AND username = %s'
+    cursor.execute(default,(username))
+    data = fetchall()
+    cursor.close()
+    return render_template('home.html', username = username, posts = data)
+
+#USE CASE 4 AND 5
+@app.route('/search_and_sign_up' , methods=['GET', 'POST'])
+def sign_up():
+    username = session['username']
+    cursor = conn.cursor
+    #serach for events of interest
+    search = ' SELECT an_event.event_id, title, description, start_time, end_time, location_name, zipcode FROM about,interested_in,organize,an_event WHERE about.category = interested_in.category AND about.group_id organize.group_id AND organize.event_id = an_event.event_id'
+    cursor.execute(search)
+    data = cursor.fetchall()
+    #sign up for selected events
+    selected_group = request.form['selected_group']
+    #check if already signed up                 ------------------------------ AND event_id = selected group
+    check = 'SELECT * FROM sign_up NATURAL JOIN an_event WHERE username = %s'
+    cursor.execute(check , (username))
+    check_data = cursor.fetchone()
+    error = None
+    if(check_data):
+        error = 'Already signed up for this event'
+        return render_template('search_and_sign_up.html' , error = error)
+    else:
+        #Need to get event_id maybe parse through selected group query, or event id = selected group
+        ins = 'INSERT INTO sign_up (event_id, username) VALUES(%i , %s)'
+        #event_id =1 used for debugging purpose
+        event_id = 1
+        cursor.execute(ins , (event_id, username))
+        conn.commit()
+        cursor.close()
+        return render_template('search_and_sign_up.html' , posts = data )
+
+ #USE CASE 6
+@app.route('/create_event' , methods = ['GET', 'POST'])
+def create_event():
+     username = session['username'] 
+     cursor = conn.cursor
+     #display groups that user is part of and authorized so they can select a group nto create an event for
+     query = 'SELECT * FROM a_group NATURAL JOIN belongs_to WHERE authorized = true AND username = %s'
+     cursor.execute(query , (username))
+     authorized_in_groups = cursor.fetchall()
+     #if not athorized in any groups return to homepage
+     if(not authorized_in_groups):
+         return render_template('home.html')
+     else:
+        #need to get all these values to update the database fro new event
+        #need to get group_id
+        group = request.form['group_id']
+        event_id = request.form['event_id']
+        title = request.form['title']
+        description = request.form['description']
+        start_time = request.form['start_time']
+        end_time = request.form['end_time']
+        location_name = request.form['location_name']
+        zipcode = request.form['zipcode']
+        location_address = request.form['location_address']
+        location_description = request.form['location_description']
+        location_latitude = request.form['location_latitude']
+        location_longitude = request.form['location_longitude']
+
+        ins_into_organize = 'INSERT INTO organize VALUES (%i , %i)'  
+        cursor.execute(ins_into_organize , (event_id, group_id))
+        conn.commit()
+        ins_into_an_event = 'INSERT INTO an_event VALUES (%i,%s,%s,%s,%s,%s,i%)'
+        cursor.execute(ins_into_an_event , (event_id,title,description,start_time,end_time,location_name,zipcode))
+        conn.commit()
+        ins_into_location = 'INSERT INTO location VALUES (%s,%i,%s,%s,%d,%d)'
+        cursor.execute(ins_into_location , (location_name, zipcode, address, description, location_latitude, location_longitude))
+        conn.commit()
+        cursor.close()
+        return render_template('create_event.html' , posts = authorized_in_groups)
+
+#USE CASE 7
+@app.route('/rate_event' ,  methods = ['GET', 'POST'])
+def rate_event():
+    username = session['username'] 
+    cursor = conn.cursor
+    #All events that user has signed up for and the event has past the end_date 
+    query = 'SELECT * FROM an_event NATURAL JOIN sign_up WHERE username = %s AND end_time < cast((now()) as date)'
+    cursor.execute(query , (username))
+    can_rate = cursor.fetchall()
+    error = None
+    if(can_rate):
+        #This should return an option from a list 0-5 from html page
+        rating = request.form['rating']
+        ins = 'INSERT INTO sign_up (rating) VALUES (%i)'
+        cursor.execute(ins , (rating))
+        conn.commit()
+        cursor.close()
+        return render_template('rate_event.html' , posts = can_rate)
+    else:
+        error = 'You cannot rate any events at this time'
+        return render_template('rate_event.html' , error = error)
+
+@app.route('/avg_rating')
+def avg_rating():
+    cursor = conn.cursor
+    query = 'SELECT avg(rating) as average_ratings FROM belongs_to, organize, sign_up WHERE belongs_to.group_id = organize.group_id AND organize.event_id = sign_up.event_id AND (rating = 0 OR rating = 1 OR rating = 2 OR rating = 3 OR rating =4 OR rating = 4 OR rating = 5) GROUP BY organize.event_id'
+    cursor.execute(query)
+    average_rating = cursor.fetchall()
+    #maybe we dont need a whole page for this query and just return to home.html --- ADD aveage_rating = average_rating
+    return render_template('avg_rating.html' , posts = average_rating)
+
+@app.route('/friends_events' , methods = ['GET', 'POST'])
+def friends_events():
+    return render_template('friends_events.html')
+
+
+
+@app.route('/logout')
+def logout():
+	session.pop('username')
+	return redirect('/')
+
+
+
+if __name__ == "__main__":
+    app.run()
