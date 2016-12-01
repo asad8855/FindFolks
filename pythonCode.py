@@ -5,7 +5,7 @@ app =Flask(__name__)
 
 conn = pymysql.connect(host='localhost',
                        user='root',
-                       password='',
+                       password='root',
                        db='findfolks',
                        charset='utf8mb4',
                        cursorclass=pymysql.cursors.DictCursor)
@@ -14,14 +14,18 @@ conn = pymysql.connect(host='localhost',
 @app.route('/' , methods=['GET','POST'])
 def index():
     #events of past 3 days
-    username = session['username']
+    #username = session['username']
     cursor = conn.cursor()
     query = 'SELECT * FROM an_event WHERE start_time >= cast((now()) as date) AND start_time < cast((now() + interval 3 day) as date)'
     cursor.execute(query)
     nextThreeDays = cursor.fetchall()
     cursor.close()
-    return render_template('index.html', message = username, posts = nextThreeDays)
-
+    error = None
+    if(nextThreeDays):
+        return render_template('index.html', posts = nextThreeDays)
+    else:
+        error = "Sorry, no upcoming events"
+        return render_template('index.html', errorUpcoming = error)
 #index execution page
 @app.route('/indexfilter'  ,  methods =['GET','POST'])
 def indexfilter():
@@ -31,13 +35,27 @@ def indexfilter():
     query = 'SELECT * FROM  about NATURUAL JOIN a_group WHERE category = %s'
     cursor.execute(query,(interest))
     selected_interest_table = cursor.fetchall()
-    error = None
+    errorInterests = None
     cursor.close()
-    if(selected_interest_table):
-        return render_template('index.html' , interestTable = selected_interest_table)
-    else:  
-        error = 'No groups currently have that interest'
-        return render_template('index.html' , error = error)
+    cursor = conn.cursor()
+    query = 'SELECT * FROM an_event WHERE start_time >= cast((now()) as date) AND start_time < cast((now() + interval 3 day) as date)'
+    cursor.execute(query)
+    nextThreeDays = cursor.fetchall()
+    cursor.close()
+    error = None
+    if(nextThreeDays):
+        if(selected_interest_table):
+            return render_template('index.html' , interestTable = selected_interest_table,posts = nextThreeDays)
+        else:  
+            errorInterests = 'No groups currently have that interest'
+            return render_template('index.html' , errorInterests = errorInterests, posts = nextThreeDays)
+    else:
+        error = "Sorry, no upcoming events"
+        if(selected_interest_table):
+            return render_template('index.html' , interestTable = selected_interest_table, errorUpcoming=error)
+        else:  
+            errorInterests = 'No groups currently have that interest'
+            return render_template('index.html' , errorInterests = errorInterests, errorUpcoming=error)
 
 
 #Define route for login
@@ -135,7 +153,7 @@ def sign_up():
     return render_template('sign_up.html' , posts = data)
 
 #sign_up execution page
-@app.route('insertSignup' , ['GET', 'POST'])
+@app.route('/insertSignup' , methods=['GET', 'POST'])
 def insertSignup():
     username = session['username']
     cursor = conn.cursor
@@ -157,7 +175,7 @@ def insertSignup():
         return render_template('home.html')
 
 #USE CASE 5
-@app.route('/searchByInterest' , ['GET', 'POST'])
+@app.route('/searchByInterest' , methods=['GET', 'POST'])
 def searchByInterest():
     username = session['username']
     cursor = conn.cursor

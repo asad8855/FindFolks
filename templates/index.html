@@ -1,24 +1,8 @@
-Skip to content
-This repository
-Search
-Pull requests
-Issues
-Gist
- @daniel-suissa
- Unwatch 1
-  Star 0
- Fork 0 daniel-suissa/FindFolks
- Code  Issues 0  Pull requests 0  Projects 0  Wiki  Pulse  Graphs  Settings
-Branch: master Find file Copy pathFindFolks/index.html
-4faba3c  8 days ago
- Daniel Suissa updated interests feature
-0 contributors
-RawBlameHistory     
-105 lines (94 sloc)  2.26 KB
 
 
 <!--For python code
 message - the user's name if is logged in
+
 line.title ### the event title
 line.date ### event date
 line.start_time ### event start time
@@ -26,6 +10,7 @@ line.end_time ### event end time
 line.description ### event description
 line.location ### event location
 line.zipcode ### event zipcode
+
 -->
 <!DOCTYPE html>
 <html>
@@ -51,13 +36,7 @@ line.zipcode ### event zipcode
 	<h2>Upcomming events:</h2>
 	{% endif %}
 
-	<div>
-		<form action="/index-w-interests" method="POST">
-			<input type="text" name="interest-title" placeholder="type your interest here" required/>
-			<input type="submit" value="Filter"/>
-		</form>
 
-		</div>
 		<table class = "generic-table events_table">
 			<th>Title</th>
 			<th>Date</th>
@@ -85,6 +64,7 @@ line.zipcode ### event zipcode
 					<td>content2</td>
 					<td>content2</td>
 			</tr>
+			{%if posts%}
 			{% for line in posts %}
 				<tr>
 					<td>line.title</td>
@@ -96,7 +76,64 @@ line.zipcode ### event zipcode
 					<td>line.zipcode</td>
 				</tr>
 			{% endfor %}
+			{% endif %}
 		</table>
+		{%if errorUpcoming%}
+		<p>{{errorUpcoming}}</p>
+		{% endif %}
+	</div>
+
+		<div>
+		<form action="/indexfilter" method="POST">
+			<input type="text" name="interest" placeholder="type your interest here" required/>
+			<input type="submit" value="Filter"/>
+		</form>
+		{%if interestTable%}
+		<table class = "generic-table events_table">
+			<th>Title</th>
+			<th>Date</th>
+			<th>Start Time</th>
+			<th>End Time</th>
+			<th>Description</th>
+			<th>Location</th> <!--location name-->
+			<th>Zipcode</th> <!--location zipcode-->
+
+			<tr>
+					<td>testContent</td>
+					<td>testContent</td>
+					<td>testContent</td>
+					<td>testContent</td>
+					<td>testContent</td>
+					<td>testContent</td> <!--location name-->
+					<td>testContent</td> <!--location zipcode-->
+			</tr>
+			<tr>
+					<td>content2</td>
+					<td>content2</td>
+					<td>content2</td>
+					<td>content2</td>
+					<td>content2</td>
+					<td>content2</td>
+					<td>content2</td>
+			</tr>
+			{% for line in interestTable %}
+				<tr>
+					<td>line.title</td>
+					<td>line.date</td>
+					<td>line.start_time</td>
+					<td>line.end_time</td>
+					<td>line.description</td>
+					<td>line.location</td>
+					<td>line.zipcode</td>
+				</tr>
+			{% endfor %}
+		</table>
+		{% endif %}
+
+		{%if errorInterests%}
+		<p>{{errorInterests}}</p>
+		{% endif %}
+
 	</div>
 
 	{% if message %}
@@ -118,5 +155,3 @@ line.zipcode ### event zipcode
 
 </body>
 </html>
-Contact GitHub API Training Shop Blog About
-© 2016 GitHub, Inc. Terms Privacy Security Status Help
