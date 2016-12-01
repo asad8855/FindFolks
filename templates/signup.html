@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Signup</title>
+	<style type="text/css">
+	table,th,td{
+		border: 1px solid black;
+	}
+	td{
+		margin-right: 20px;
+	}
+</style>
+</head>
+<body>
+	<h1>Signup For Events!</h1>
+
+	{%if signupMessage%}
+		<p>{{signupMessage}}</p>
+	{% endif %}
+	<p>Search events by name:</p>
+	<form action="/searchByName" method="POST">
+		<input type="text" name="eventName" placeholder="type an event's name here" required/>
+		<input type="submit" value="Search"/>
+	</form>
+	<p>Or just <a href="/searchByInterest">Click here</a> to view events that match your interests!</p>
+	{%if posts%}
+	<table class = "generic-table events_table">
+		<th>Title</th>
+		<th>Date</th>
+		<th>Start Time</th>
+		<th>End Time</th>
+		<th>Description</th>
+		<th>Location</th> <!--location name-->
+		<th>Zipcode</th> <!--location zipcode-->
+
+		<tr>
+				<td>testContent</td>
+				<td>testContent</td>
+				<td>testContent</td>
+				<td>testContent</td>
+				<td>testContent</td>
+				<td>testContent</td> <!--location name-->
+				<td>testContent</td> <!--location zipcode-->
+		</tr>
+		<tr>
+				<td>content2</td>
+				<td>content2</td>
+				<td>content2</td>
+				<td>content2</td>
+				<td>content2</td>
+				<td>content2</td>
+				<td>content2</td>
+		</tr>
+		{% for line in posts %}
+			<tr>
+				<td>line.title</td>
+				<td>line.date</td>
+				<td>line.start_time</td>
+				<td>line.end_time</td>
+				<td>line.description</td>
+				<td>line.location</td>
+				<td>line.zipcode</td>
+			</tr>
+		{% endfor %}
+	</table>
+	{% endif %}
+
+	{%if postsError%}
+	<p>{{postsError}}</p>
+	{% endif %}
+
+	<h2>Enter the event id along with the group id to sign up for an event</h2>
+	<form action="/insertSignup" method="POST">
+		<input type="text" name="event_id" placeholder="type an event's id here" required/>
+		<input type="text" name="group_id" placeholder="type a group's id here" required/>
+		<input type="submit" value="Sign Up"/>
+	</form>
+</body>
+</html>
