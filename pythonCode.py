@@ -11,6 +11,7 @@ conn = pymysql.connect(host='localhost',
                        cursorclass=pymysql.cursors.DictCursor)
 
 #Define a route to index
+#chekc if user is in session
 @app.route('/' , methods=['GET','POST'])
 def index():
     #events of past 3 days
