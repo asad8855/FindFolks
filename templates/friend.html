@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
-	<title>My Friends</title>
-	<style type="text/css">
+    <title>My Friends</title>
+    <style type="text/css">
         table, th, td {
             border: 1px solid black;
         }
@@ -13,14 +13,14 @@
     </style>
 </head>
 <body>
-	<h1>{{message}}, here is your friends list:</h1>
-	{%if posts%}
-	<table class="generic-table events_table">
+    <h1>{{message}}, here is your friends list:</h1>
+    {%if posts%}
+    <table class="generic-table events_table">
         <th>Username</th>
         <th>First Name</th>
         <th>Last Name</th>
         <th>Email</th>
-        
+
         {% for line in posts %}
         <tr>
             <td>{{line.username}}</td>
@@ -31,7 +31,7 @@
             <td>{{line.zipcode}}</td>
         </tr>
         {% endfor %}
-        
+
     </table>
     {% endif %}
     {%if not posts%}
@@ -43,8 +43,8 @@
         <input type="text" name="username" placeholder="Username" required /><br>
         <input type="submit" value="Add Friend" />
     </form>
-        {% if error %}
-        <p class="error">{{error}} </p>
-        {% endif %}
+    {% if error %}
+    <p class="error">{{error}} </p>
+    {% endif %}
 </body>
 </html>
