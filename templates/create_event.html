@@ -9,12 +9,13 @@
         <input type="number" name="group_id" placeholder="Group id" required />
         <input type="text" name="title" placeholder="Event title" required />
         <input type="text" name="description" placeholder="Description" required />
-        <input type="datetime-local" name="start_time" placeholder="Start time" required />
-        <input type="datetime-local" name="end_time" placeholder="End time" required />
+        <input type="text" name="start_time" placeholder="Start time" required />
+        <input type="text" name="end_time" placeholder="End time" required />
         <input type="text" name="location_name" placeholder="Location name" required />
         <input type="text" name="zipcode" placeholder="Zipcode" required />
         <input type="submit" value="Create" />
     </form>
+    <p>Please emter the start time amd the end time in the format: "MM-DD-YYYY-HH-MM-SS" (24hour format)</p>
     {% if error %}
     <p class="error">Message: {{error}} </p>
     {% endif %}
