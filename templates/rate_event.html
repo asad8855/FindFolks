@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Rate Events</title>
+    <style type="text/css">
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        td {
+            margin-right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <p>Here are the events that already started:</p>
+    {%if posts%}
+    <table class="generic-table events_table">
+        <th>Title</th>
+        <th>Date</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+        <th>Description</th>
+        <th>Location</th> <!--location name-->
+        <th>Zipcode</th> <!--location zipcode-->
+        <th>Rating</th> <!--average rating-->
+        <tr>
+            <td>testContent</td>
+            <td>testContent</td>
+            <td>testContent</td>
+            <td>testContent</td>
+            <td>testContent</td>
+            <td>testContent</td> <!--location name-->
+            <td>testContent</td> <!--location zipcode-->
+            <td>testContent</td> <!--average rating-->
+        </tr>
+        <tr>
+            <td>content2</td>
+            <td>content2</td>
+            <td>content2</td>
+            <td>content2</td>
+            <td>content2</td>
+            <td>content2</td>
+            <td>content2</td>
+            <td>content2</td>
+        </tr>
+        {% for line in posts %}
+        <tr>
+            <td>line.title</td>
+            <td>line.date</td>
+            <td>line.start_time</td>
+            <td>line.end_time</td>
+            <td>line.description</td>
+            <td>line.location</td>
+            <td>line.zipcode</td>
+            <td>line.average_rating</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+    {%if postsError%}
+    <p>{{postsError}}</p>
+    {% endif %}
+
+    <h2>Pick an event and rate it</h2>
+    <form action="/insertSignup" method="POST">
+        <input type="text" name="event_id" placeholder="type an event's id here" required />
+        <input type="text" name="group_id" placeholder="rate from 0-5" required />
+        <input type="submit" value="Rate" />
+    </form>
+</body>
+</html>
