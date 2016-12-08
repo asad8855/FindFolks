@@ -354,10 +354,42 @@ def rate_eventget():
 def friends_events():
     return render_template('friends_events.html')
 
+@app.route('/friend' , methods = ['GET', 'POST'])
+def friends_events():
+    return render_template('friend.html')
+
+@app.route('/friendAuth' , methods = ['GET', 'POST'])
+def friends_events():
+    username = session['username']
+    friend_username = request.form['username']
+    cursor = conn.cursor
+    query = 'SELECT friend_to from friend WHERE friend_of = %s'
+    cursor.execute(query , (username))
+    all_friends = fetchall()
+
+    query = 'SELECT username from friend WHERE friend_of = %s'
+    cursor.execute(query , (friend_username))
+    exist_friend = fetchone()
+    if(!all_friends):
+        all_friends = None
+    if(exist_friend):
+        return render_template('friend.html', posts = all_friends, error = friend_username + " is already your friend!")
+    else:
+        query = 'SELECT username from member WHERE username = %s'
+        cursor.execute(query , (friend_username))
+        exist_member = fetchone()
+        if(exist_member):
+            query = 'INSERT INTO friend VALUES (%s, %s)'
+            cursor.execute(query , (username, friend_username))
+            cursor.commit()
+            return render_template('friend.html', posts = all_friends, error = friend_username + " is now your friend!")
+        else:
+            return render_template('friend.html', posts = all_friends, error = "Could not find " + friend_username + " on FindFolks")
 
 @app.route('/logout')
 def logout():
 	session.pop('username')
+
 	return redirect('/')
 
 

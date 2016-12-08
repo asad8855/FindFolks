@@ -24,26 +24,6 @@
         <th>Location</th> <!--location name-->
         <th>Zipcode</th> <!--location zipcode-->
         <th>Rating</th> <!--average rating-->
-        <tr>
-            <td>testContent</td>
-            <td>testContent</td>
-            <td>testContent</td>
-            <td>testContent</td>
-            <td>testContent</td>
-            <td>testContent</td> <!--location name-->
-            <td>testContent</td> <!--location zipcode-->
-            <td>testContent</td> <!--average rating-->
-        </tr>
-        <tr>
-            <td>content2</td>
-            <td>content2</td>
-            <td>content2</td>
-            <td>content2</td>
-            <td>content2</td>
-            <td>content2</td>
-            <td>content2</td>
-            <td>content2</td>
-        </tr>
         {% for line in posts %}
         <tr>
             <td>line.title</td>
@@ -66,7 +46,14 @@
     <h2>Pick an event and rate it</h2>
     <form action="/insertSignup" method="POST">
         <input type="text" name="event_id" placeholder="type an event's id here" required />
-        <input type="text" name="group_id" placeholder="rate from 0-5" required />
+        <select name="rating">
+            <option value=1>0 stars</option>
+            <option value="1">1 stars</option>
+            <option value="2">2 stars</option>
+            <option value="3">3 stars</option>
+            <option value="4">4 stars</option>
+            <option value="5">5 stars</option>
+        </select>
         <input type="submit" value="Rate" />
     </form>
 </body>

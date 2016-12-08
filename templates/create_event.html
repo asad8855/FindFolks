@@ -5,14 +5,14 @@
 </head>
 <body>
     <p> Enter the details for the event you want to create here: </p>
-    <form action="/create_event" method="POST">
-        <input type="number" name="group_id" placeholder="group_id" required />
-        <input type="text" name="title" placeholder="Event Name" required />
-        <input type="text" name="description" placeholder="Event Name" required />
-        <input type="datetime-local" name="start_time" placeholder="Event Name" required />
-        <input type="datetime-local" name="end_time" placeholder="Event Name" required />
-        <input type="text" name="location_name" placeholder="Event Name" required />
-        <input type="text" name="zipcode" placeholder="Event Name" required />
+    <form action="/createEventAuth" method="POST">
+        <input type="number" name="group_id" placeholder="Group id" required />
+        <input type="text" name="title" placeholder="Event title" required />
+        <input type="text" name="description" placeholder="Description" required />
+        <input type="datetime-local" name="start_time" placeholder="Start time" required />
+        <input type="datetime-local" name="end_time" placeholder="End time" required />
+        <input type="text" name="location_name" placeholder="Location name" required />
+        <input type="text" name="zipcode" placeholder="Zipcode" required />
         <input type="submit" value="Create" />
     </form>
     {% if error %}
