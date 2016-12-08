@@ -17,7 +17,6 @@
     {%if posts%}
     <table class="generic-table events_table">
         <th>Title</th>
-        <th>Date</th>
         <th>Start Time</th>
         <th>End Time</th>
         <th>Description</th>
@@ -26,33 +25,32 @@
         <th>Rating</th> <!--average rating-->
         {% for line in posts %}
         <tr>
-            <td>line.title</td>
-            <td>line.date</td>
-            <td>line.start_time</td>
-            <td>line.end_time</td>
-            <td>line.description</td>
-            <td>line.location</td>
-            <td>line.zipcode</td>
-            <td>line.average_rating</td>
+            <td>{{line.title}}</td>
+            <td>{{line.start_time}}</td>
+            <td>{{line.end_time}}</td>
+            <td>{{line.description}}</td>
+            <td>{{line.location_name}}</td>
+            <td>{{line.zipcode}}</td>
+            <td>{{line.average_ratings}}</td>
         </tr>
         {% endfor %}
     </table>
     {% endif %}
 
-    {%if postsError%}
-    <p>{{postsError}}</p>
+    {%if error%}
+    <p>{{error}}</p>
     {% endif %}
 
     <h2>Pick an event and rate it</h2>
-    <form action="/insertSignup" method="POST">
+    <form action="/rate_event" method="POST">
         <input type="text" name="event_id" placeholder="type an event's id here" required />
         <select name="rating">
-            <option value=1>0 stars</option>
-            <option value="1">1 stars</option>
-            <option value="2">2 stars</option>
-            <option value="3">3 stars</option>
-            <option value="4">4 stars</option>
-            <option value="5">5 stars</option>
+            <option value=0>0 stars</option>
+            <option value=1>1 stars</option>
+            <option value=2>2 stars</option>
+            <option value=3>3 stars</option>
+            <option value=4>4 stars</option>
+            <option value=5>5 stars</option>
         </select>
         <input type="submit" value="Rate" />
     </form>
