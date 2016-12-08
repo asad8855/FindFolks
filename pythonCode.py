@@ -102,8 +102,13 @@ def loginAuth():
 #Define route for register
 @app.route('/register' , methods=['GET', 'POST'])
 def register():
-        return render_template('register.html')
-
+        cursor = conn.cursor()
+        query = 'SELECT * FROM interest'
+        cursor.execute(query)
+        interest = cursor.fetchall()
+        cursor.close()
+        return render_template('register.html' , posts = interest)
+    
 #register execution page
 @app.route('/registerAuth' , methods=['GET', 'POST'])
 def registerAuth():
@@ -114,7 +119,9 @@ def registerAuth():
     lastname = request.form['lastname']
     email = request.form['email']
     zipcode = request.form['zipcode']
-    interest = request.interest['interest']
+    interest = request.form['interest'] 
+    keyword = request.form['keyword'] 
+
 
     cursor = conn.cursor()
     query = 'SELECT * FROM member WHERE username = %s'
@@ -124,15 +131,31 @@ def registerAuth():
 
     if(data):
         error = "This user already exists"
-        return render_template('register.html', error = error)
-    else:
-        ins = 'INSERT INTO member VALUES (%s,%s,%s,%s,%s,%i)'
-        cursor.execute(ins , (username,password,firstname,lastname,email,zipcode))
-        conn.commit()
-        ins = 'INSERT INTO interested_in (username,category) VALUES (%s,%s)'
-        cursor.execute(ins , (username,interest))
+        query = 'SELECT * FROM interest'
+        cursor.execute(query)
+        interest = cursor.fetchall()
         cursor.close()
-        return render_template('login.html')
+        return render_template('register.html', posts = interest ,error = error)
+    else:
+        query = 'SELECT * FROM interest WHERE category = %s AND keyword = %s'
+        cursor.execute(query,(interest , keyword))
+        data = cursor.fetchone()
+        if(data):
+            ins = 'INSERT INTO member VALUES (%s,%s,%s,%s,%s,%s)'
+            cursor.execute(ins , (username,password,firstname,lastname,email,zipcode))
+            conn.commit()
+            ins = 'INSERT INTO interested_in (username,category,keyword) VALUES (%s,%s,%s)'
+            cursor.execute(ins , (username,interest,keyword))
+            conn.commit()
+            cursor.close()
+            return render_template('login.html')
+        else:
+            query = 'SELECT * FROM interest'
+            cursor.execute(query)
+            interest = cursor.fetchall()
+            cursor.close()
+            error = "Only insert the keyword directly to the right of your interest of choice as listed"
+            return render_template('register.html', posts = interest, error = error)
 
 
 #home page
@@ -163,7 +186,7 @@ def sign_up():
     username = session['username']
     cursor = conn.cursor()
     #search for events of groups user belongs to
-    search = 'SELECT an_event.event_id,title,description,start_time,end_time,location_name,zipcode FROM belongs_to,organize,an_event WHERE belongs_to.group_id = organize.group_id AND organize.event_id = an_event.event_id'
+    search = 'SELECT * FROM an_event WHERE start_time >= cast((now()) as date) AND start_time < cast((now() + interval 29 day) as date)'
     cursor.execute(search)
     data = cursor.fetchall()
     error = None
@@ -209,7 +232,7 @@ def searchByInterest():
     if(data):
         return render_template('signup.html' , posts = data)
     else:
-        cursor = conn.cursor
+        cursor = conn.cursor()
         #default table
         search = 'SELECT an_event.event_id,title,description,start_time,end_time,location_name,zipcode FROM belongs_to,organize,an_event WHERE belongs_to.group_id = organize.group_id AND organize.event_id = an_event.event_id'
         data = cursor.fetchall()
@@ -223,36 +246,38 @@ def insertSignup():
      username = session['username']
      event_id = request.form['event_id']
      cursor = conn.cursor()
+     #default table
+     search = 'SELECT * FROM an_event WHERE start_time >= cast((now()) as date) AND start_time < cast((now() + interval 29 day) as date)'
+     cursor.execute(search)
+     events = cursor.fetchall()
+
      query = 'SELECT * FROM sign_up WHERE event_id = %s AND username = %s'
      cursor.execute(query,(event_id , username))
      data = cursor.fetchone()
      error = None
      if(data):
-        #default table
-        search = 'SELECT an_event.event_id,title,description,start_time,end_time,location_name,zipcode FROM belongs_to,organize,an_event WHERE belongs_to.group_id = organize.group_id AND organize.event_id = an_event.event_id'
-        data = cursor.fetchall()
         cursor.close()
         note = "You are already signed up for this event"
-        return render_template('signup.html'  , signupMessage = note)
+        return render_template('signup.html'  , signupMessage = note, posts=events)
      else:
          #check if this user is entering an event_id that he is able to sign up for (e.g. member of the group that organizes it)
          query = 'SELECT event_id FROM belongs_to NATURAL JOIN organize WHERE  belongs_to.group_id = organize.group_id AND username = %s AND event_id = %s'
          cursor.execute(query , (username , event_id))
-         data = cursor.fetchone()
+         auth = cursor.fetchone()
 
-         if(data):
+         if(auth):
             ins = 'INSERT INTO sign_up (event_id , username , rating) VALUES (%s,%s,6)'
             cursor.execute(ins , (event_id , username))
             cursor.close()
             note = "You are now signed up for this event!"
-            return render_template('signup.html' , posts = data , signupMessage = note)
+            return render_template('signup.html' , posts = events , signupMessage = note)
          else:
             #default table
             search = 'SELECT an_event.event_id,title,description,start_time,end_time,location_name,zipcode FROM belongs_to,organize,an_event WHERE belongs_to.group_id = organize.group_id AND organize.event_id = an_event.event_id'
             data = cursor.fetchall()
             cursor.close()
             note = "You cannot sign up for this event"
-            return render_template('signup.html' ,  signupMessage = note)
+            return render_template('signup.html' ,  signupMessage = note, posts = events)
 
  #USE CASE 6
 @app.route('/create_event' , methods = ['GET', 'POST'])
@@ -274,25 +299,37 @@ def createEventAuth():
      if(authorized_in_groups):
         #need to get group_id
         title = request.form['title']
+        group_id = request.form['group_id']
         description = request.form['description']
         start_time = request.form['start_time']
         end_time = request.form['end_time']
         location_name = request.form['location_name']
         zipcode = request.form['zipcode']
+
+        #stringify start time and end time
+        start_params = start_time.split('-')
+        start_string = ""
+        start_string = start_params[2] + '-' + start_params[1] + '-' + start_params[0] + ' ' + start_params[3] + ':' + start_params[4] + ':' + start_params[5]
+        end_params = end_time.split('-')
+        end_string = ""
+        end_string = end_params[2] + '-' + end_params[1] + '-' + end_params[0] + ' ' + end_params[3] + ':' + end_params[4] + ':' + end_params[5]
         #check that location exists
         query = 'SELECT location_name , zipcode FROM location WHERE location_name = %s AND zipcode = %s'
         cursor.execute(query , (location_name , zipcode))
-        data = fetchone()
+        data = cursor.fetchone()
         cursor.close()
         if(data):
             cursor = conn.cursor()
             #NEED DIFFERENT QUERY TO INPUT DATE TIME
-            ins_into_an_event = 'INSERT INTO an_event (title,description,start_time,end_time,location_name,zipcode) VALUES (%s,%s,%s,%s,%s,%s,%s)'
-            cursor.execute(ins_into_an_event , (title,description,start_time,end_time,location_name,zipcode))
+            ins_into_an_event = 'INSERT INTO an_event (title,description,start_time,end_time,location_name,zipcode) VALUES (%s,%s,%s,%s,%s,%s)'
+            cursor.execute(ins_into_an_event , (title,description,start_string,end_string,location_name,zipcode))
             conn.commit()
             maxID = 'SELECT MAX(event_id) FROM an_event'
             cursor.execute(maxID)
-            lastID = fetchone()
+            lastID = cursor.fetchone()
+            print(lastID)
+            lastID = int(lastID['MAX(event_id)'])
+            
             ins_into_organize = 'INSERT INTO organize VALUES (%s , %s)'  
             cursor.execute(ins_into_organize , (lastID, group_id))
             conn.commit()
@@ -312,18 +349,18 @@ def createEventAuth():
 @app.route('/avgRatings' ,  methods = ['GET', 'POST'])
 def avgRatings():
     username = session['username'] 
-    cursor = conn.cursor
+    cursor = conn.cursor()
     #All events that user has signed up for and the event has past the end_date DEFAULT VALUE FOR RATING IS 6 
-    query = 'SELECT event_id, title , avg(rating) as average_ratings FROM an_event NATURAL JOIN sign_up WHERE username = %s AND rating != 6 AND end_time < cast((now()) as date) GROUP BY event_id'
+    query = 'SELECT  title , avg(rating) as average_ratings , description, start_time, end_time, location_name, zipcode FROM an_event NATURAL JOIN sign_up WHERE username = %s AND rating != 6 AND end_time < cast((now()) as date) GROUP BY event_id'
     cursor.execute(query , (username))
     data = cursor.fetchall()
     cursor.close()
     error = None
     if(data):
-        return render_template('avgRatings.html' , posts = can_rate) 
+        return render_template('rate_event.html' , posts = data) 
     else:
         error = "Events have yet to be rated"
-        return render_template('rateEvent.html' , error = error)
+        return render_template('rate_event.html' , error = error)
 
 #rate event execution page
 @app.route('/rate_event' ,  methods = ['GET', 'POST'])
@@ -332,15 +369,15 @@ def rate_eventget():
     #This should return an option from a list 0-5 from html page
     rating = request.form['rating']
     event_id = request.form['event_id']
-    cursor = conn.cursor
-    query = 'SELECT * FROM an_event NATURAL JOIN sign_up WHERE username = %s AND event_id = %i'
+    cursor = conn.cursor()
+    query = 'SELECT * FROM an_event NATURAL JOIN sign_up WHERE username = %s AND event_id = %s'
     cursor.execute(query , (username , event_id))
-    can_rate = fetchone()
+    can_rate = cursor.fetchone()
     if(can_rate):
-        ins = 'INSERT INTO sign_up (rating) VALUES (%i)'
-        cursor.execute(ins , (rating))
+        ins = 'UPDATE sign_up SET rating = %s WHERE event_id = %s AND username =%s'
+        cursor.execute(ins , (rating , event_id,username))
         conn.commit()
-        query = 'SELECT event_id, title , avg(rating) as average_ratings FROM an_event NATURAL JOIN sign_up WHERE username = %s AND rating != 6 AND end_time < cast((now()) as date) GROUP BY event_id'
+        query = 'SELECT  title , avg(rating) as average_ratings , description, start_time, end_time, location_name, zipcode FROM an_event NATURAL JOIN sign_up WHERE username = %s AND rating != 6 AND end_time < cast((now()) as date) GROUP BY event_id'
         cursor.execute(query , (username))
         data = cursor.fetchall()
         cursor.close()
@@ -355,14 +392,14 @@ def friends_events():
     return render_template('friends_events.html')
 
 @app.route('/friend' , methods = ['GET', 'POST'])
-def friends_events():
+def friend():
     return render_template('friend.html')
 
 @app.route('/friendAuth' , methods = ['GET', 'POST'])
-def friends_events():
+def friendAuth():
     username = session['username']
     friend_username = request.form['username']
-    cursor = conn.cursor
+    cursor = conn.cursor()
     query = 'SELECT friend_to from friend WHERE friend_of = %s'
     cursor.execute(query , (username))
     all_friends = fetchall()
@@ -370,6 +407,7 @@ def friends_events():
     query = 'SELECT username from friend WHERE friend_of = %s'
     cursor.execute(query , (friend_username))
     exist_friend = fetchone()
+    '''
     if(!all_friends):
         all_friends = None
     if(exist_friend):
@@ -385,7 +423,7 @@ def friends_events():
             return render_template('friend.html', posts = all_friends, error = friend_username + " is now your friend!")
         else:
             return render_template('friend.html', posts = all_friends, error = "Could not find " + friend_username + " on FindFolks")
-
+            '''
 @app.route('/logout')
 def logout():
 	session.pop('username')
