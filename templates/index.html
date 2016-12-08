@@ -1,6 +1,4 @@
-
-
-<!--For python code
+﻿<!--For python code
 message - the user's name if is logged in
 
 line.title ### the event title
@@ -15,143 +13,105 @@ line.zipcode ### event zipcode
 <!DOCTYPE html>
 <html>
 <head>
-	<title>FindFolks</title>
-	<style type="text/css">
-		table,th,td{
-			border: 1px solid black;
-		}
-		td{
-			margin-right: 20px;
-		}
-	</style>
+    <title>FindFolks</title>
+    <style type="text/css">
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        td {
+            margin-right: 20px;
+        }
+    </style>
 </head>
 <body>
-	<h1>Welcome to FindFolks!</h1>
+    <h1>Welcome to FindFolks!</h1>
 
-	{% if message %}
-	<h2>{{message}}, Here are all the upcomming events:</h2>
-	{% endif %}
+    {% if message %}
+    <h2>{{message}}, Here are all the upcomming events:</h2>
+    {% endif %}
 
-	{% if not message %}
-	<h2>Upcomming events:</h2>
-	{% endif %}
+    {% if not message %}
+    <h2>Upcomming events:</h2>
+    {% endif %}
 
 
-		<table class = "generic-table events_table">
-			<th>Title</th>
-			<th>Date</th>
-			<th>Start Time</th>
-			<th>End Time</th>
-			<th>Description</th>
-			<th>Location</th> <!--location name-->
-			<th>Zipcode</th> <!--location zipcode-->
+    <table class="generic-table events_table">
+        <th>Title</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+        <th>Description</th>
+        <th>Location</th> <!--location name-->
+        <th>Zipcode</th> <!--location zipcode-->
+        {%if posts%}
+        {% for line in posts %}
+        <tr>
+            <td>{{line.title}}</td>
+            <td>{{line.start_time}}</td>
+            <td>{{line.end_time}}</td>
+            <td>{{line.description}}</td>
+            <td>{{line.location_name}}</td>
+            <td>{{line.zipcode}}</td>
+        </tr>
+        {% endfor %}
+        {% endif %}
+    </table>
+    {%if errorUpcoming%}
+    <p>{{errorUpcoming}}</p>
+    {% endif %}
+    </div>
 
-			<tr>
-					<td>testContent</td>
-					<td>testContent</td>
-					<td>testContent</td>
-					<td>testContent</td>
-					<td>testContent</td>
-					<td>testContent</td> <!--location name-->
-					<td>testContent</td> <!--location zipcode-->
-			</tr>
-			<tr>
-					<td>content2</td>
-					<td>content2</td>
-					<td>content2</td>
-					<td>content2</td>
-					<td>content2</td>
-					<td>content2</td>
-					<td>content2</td>
-			</tr>
-			{%if posts%}
-			{% for line in posts %}
-				<tr>
-					<td>line.title</td>
-					<td>line.date</td>
-					<td>line.start_time</td>
-					<td>line.end_time</td>
-					<td>line.description</td>
-					<td>line.location</td>
-					<td>line.zipcode</td>
-				</tr>
-			{% endfor %}
-			{% endif %}
-		</table>
-		{%if errorUpcoming%}
-		<p>{{errorUpcoming}}</p>
-		{% endif %}
-	</div>
+    <div>
+        <form action="/indexfilter" method="POST">
+            <input type="text" name="interest" placeholder="type your interest here" required />
+            <input type="submit" value="Filter" />
+        </form>
+        {%if interestTable%}
+        <table class="generic-table events_table">
+            <th>Title</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Description</th>
+            <th>Location</th> <!--location name-->
+            <th>Zipcode</th> <!--location zipcode-->
+            {%if posts%}
+            {% for line in interestTable %}
+            <tr>
+                <td>{{line.title}}</td>
+                <td>{{line.start_time}}</td>
+                <td>{{line.end_time}}</td>
+                <td>{{line.description}}</td>
+                <td>{{line.location_name}}</td>
+                <td>{{line.zipcode}}</td>
+            </tr>
+            {% endfor %}
+            {% endif %}
+        </table>
+        {% endif %}
+        
 
-		<div>
-		<form action="/indexfilter" method="POST">
-			<input type="text" name="interest" placeholder="type your interest here" required/>
-			<input type="submit" value="Filter"/>
-		</form>
-		{%if interestTable%}
-		<table class = "generic-table events_table">
-			<th>Title</th>
-			<th>Date</th>
-			<th>Start Time</th>
-			<th>End Time</th>
-			<th>Description</th>
-			<th>Location</th> <!--location name-->
-			<th>Zipcode</th> <!--location zipcode-->
+        {%if errorInterests%}
+        <p>{{errorInterests}}</p>
+        {% endif %}
 
-			<tr>
-					<td>testContent</td>
-					<td>testContent</td>
-					<td>testContent</td>
-					<td>testContent</td>
-					<td>testContent</td>
-					<td>testContent</td> <!--location name-->
-					<td>testContent</td> <!--location zipcode-->
-			</tr>
-			<tr>
-					<td>content2</td>
-					<td>content2</td>
-					<td>content2</td>
-					<td>content2</td>
-					<td>content2</td>
-					<td>content2</td>
-					<td>content2</td>
-			</tr>
-			{% for line in interestTable %}
-				<tr>
-					<td>line.title</td>
-					<td>line.date</td>
-					<td>line.start_time</td>
-					<td>line.end_time</td>
-					<td>line.description</td>
-					<td>line.location</td>
-					<td>line.zipcode</td>
-				</tr>
-			{% endfor %}
-		</table>
-		{% endif %}
+    </div>
 
-		{%if errorInterests%}
-		<p>{{errorInterests}}</p>
-		{% endif %}
-
-	</div>
-
-	{% if message %}
-	<div>
-		<a href="/upcoming">View upcoming events</a>
-		<a href="/events-of-interest">See events of your interest</a>
-		<a href="/friends-events">See your friend's events</a>
-		<a href="/groups">See your groups</a>
-		<a href="/create-event">Create an Event for your Group!</a>
-	</div>
-	{% endif %}
-	{% if not message %}
-	<div>
-		<h2>Login or register to find more Folks!</h2>
-		<a href="/login">Login</a>
-		<a href="/register">Register</a>
-	</div>
-	{% endif %}
+    {% if message %}
+    <div>
+        <a href="/viewUpcomingEvents">View upcoming events</a>
+        <a href="/events-of-interest">See events of your interest</a>
+        <a href="/friends-events">See your friend's events</a>
+        <a href="/groups">See your groups</a>
+        <a href="/create_event">Create an Event for your Group!</a>
+    </div>
+    {% endif %}
+    {% if not message %}
+    <div>
+        <h2>Login or register to find more Folks!</h2>
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+    </div>
+    {% endif %}
 
 </body>
 </html>
