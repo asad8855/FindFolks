@@ -15,7 +15,7 @@ app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 
 conn = pymysql.connect(host='localhost',
                        user='root',
-                       password='root',
+                       password='',
                        db='findfolks',
                        charset='utf8mb4',
                        cursorclass=pymysql.cursors.DictCursor)
@@ -440,7 +440,7 @@ def friendsEvents():
 def friend():
     username = session['username']
     cursor = conn.cursor() 
-    query = 'SELECT * from friend, member WHERE friend_of = username AND friend_to = %s '
+    query = 'SELECT friend.friend_of, member.firstname , member.lastname, member.email from friend, member WHERE friend_to = username AND friend_of = %s '
     cursor.execute(query , (username))
     data = cursor.fetchall()
     if(data):
@@ -455,20 +455,24 @@ def friendAuth():
     query = 'SELECT friend_of from friend WHERE friend_to = %s AND friend_of = %s'
     cursor.execute(query , (friend_username,username))
     exists = cursor.fetchone()
-    query = 'SELECT * from friend, member WHERE friend_of = username AND friend_to = %s '
+    query = 'SELECT * from friend, member WHERE friend_to = username AND friend_of = %s '
     cursor.execute(query , (username))
     data = cursor.fetchall()
     query = 'SELECT username from friend WHERE friend_of = %s'
     if(exists):
-        render_template('friend.html',posts = data, error = "This person is in your friends list already!" )
+        return render_template('friend.html',posts = data, error = "This person is in your friends list already!" )
     else:
         query = 'SELECT * from member WHERE username = %s'
         cursor.execute(query , (friend_username))
         exists_member = cursor.fetchone()
-        if(exits_member):
-            render_template('friend.html',posts = data, error = "Successfully added friend!" )
+        if(exists_member):
+            ins = 'INSERT INTO friend VALUES (%s,%s)' 
+            cursor.execute(ins , (username, friend_username))
+            conn.commit()
+            cursor.close()
+            return render_template('friend.html',posts = data, error = "Successfully added friend!" )
         else:
-            render_template('friend.html',posts = data, error = "There is no such member in findFolks" )
+            return render_template('friend.html',posts = data, error = "There is no such member in findFolks" )
 
 #Define route for join group
 @app.route('/joinGroup' , methods=['GET', 'POST'])
@@ -479,9 +483,9 @@ def joinGroup():
         groups = cursor.fetchall()
         cursor.close()
         if(groups):
-            return render_template('join-group.html' , posts = groups)
+            return render_template('joinGroup.html' , posts = groups)
         else:
-            return render_template('join-group.html' , error = "No groups in FindFolks")
+            return render_template('joinGroup.html' , error = "No groups in FindFolks")
 #join group 
 @app.route('/joinGroupExec' , methods=['GET', 'POST'])
 def joinGroupExec():
@@ -499,10 +503,10 @@ def joinGroupExec():
     cursor.close()
     if(data):
         error = "You successfully joined the group!"
-        return render_template('join-group.html', posts = groups ,error = error)
+        return render_template('joinGroup.html', posts = groups ,error = error)
     else:
         error = "This group Id does not exist, try another one!"
-        return render_template('join-group.html', posts = groups ,error = error)
+        return render_template('joinGroup.html', posts = groups ,error = error)
 
 @app.route('/add-interest' , methods=['GET', 'POST'])
 def addInterest():
@@ -519,12 +523,9 @@ def insertInterest():
     cursor.execute(query,(interest,keyword, username))
     exists = cursor.fetchone()
     if(exists):
-        cursor.close()
+        #cursor.close()
         return render_template('add-interest.html', error="you are already interested in that!" )
     else:
-        ins = 'INSERT INTO interest (category,keyword) VALUES (%s,%s)'
-        cursor.execute(ins , (interest,keyword))
-        conn.commit()
         ins = 'INSERT INTO interested_in (username,category,keyword) VALUES (%s,%s,%s)'
         cursor.execute(ins , (username,interest,keyword))
         conn.commit()
