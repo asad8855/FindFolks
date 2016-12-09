@@ -17,16 +17,22 @@
     {%if posts%}
     <table class="generic-table events_table">
         <th>Username</th>
-        <th>First Name</th>
-        <th>Last Name</th>
-        <th>Email</th>
+        <th>Event_id</th>
+        <th>Title</th>
+        <th>Description</th>
+        <th>start_time</th>
+        <th>End_time</th>
+        <th>Location</th>
+        <th>Zipcode</th>
 
         {% for line in posts %}
         <tr>
-            <td>{{line.username}}</td>
-            <td>{{line.first}}</td>
-            <td>{{line.last}}</td>
-            <td>{{line.email}}</td>
+            <td>{{line.friend_to}}</td>
+            <td>{{line.event_id}}</td>
+            <td>{{line.title}}</td>
+            <td>{{line.description}}</td>
+            <td>{{line.start_time}}</td>
+            <td>{{line.end_time}}</td>
             <td>{{line.location_name}}</td>
             <td>{{line.zipcode}}</td>
         </tr>
