@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Top 5 Events</title>
+	 <style type="text/css">
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        td {
+            margin-right: 20px;
+        }
+    </style>
+</head>
+<body>
+	 <table class="generic-table events_table">
+        <th>Title</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+        <th>Description</th>
+        <th>Location</th> <!--location name-->
+        <th>Zipcode</th> <!--location zipcode-->
+        {%if posts%}
+        {% for line in posts %}
+        <tr>
+            <td>{{line.title}}</td>
+            <td>{{line.start_time}}</td>
+            <td>{{line.end_time}}</td>
+            <td>{{line.description}}</td>
+            <td>{{line.location_name}}</td>
+            <td>{{line.zipcode}}</td>
+        </tr>
+        {% endfor %}
+        {% endif %}
+    </table>
+    {%if errorUpcoming%}
+    <p>{{errorUpcoming}}</p>
+    {% endif %}
+</body>
+</html>

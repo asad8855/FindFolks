@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Add an Interest</title>
+</head>
+<body>
+	<form action="/insert-interest" method="POST">
+        <input type="text" name="category" placeholder="Category" required /><br>
+        <input type="text" name="keyword" placeholder="Keyword" required /><br>
+        <input type="submit" value="Add Interest" />
+    </form>
+        {% if error %}
+        <p class="error">{{error}} </p>
+        {% endif %}
+    <a href="/">Home</a><br/>
+    <a href="/home">My FindFolks</a><br/>
+    <a href="/logout">Logout</a><br/>
+</body>
+</html>

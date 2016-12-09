@@ -24,7 +24,7 @@
         <input type="submit" value="Search" />
     </form>
     <p><a href="/searchByInterest">Click here</a> to view events that match your interests!</p>
-    <p><a href="/searchByFriends">Click here</a> to view events that your friends signed up for!</p>
+    <p><a href="/friends-events">Click here</a> to view events that your friends signed up for!</p>
     {%if posts%}
     <table class="generic-table events_table">
         <th>ID</th>
@@ -61,5 +61,9 @@
     {%if signupMessage%}
     <p>{{signupMessage}}</p>
     {% endif %}
+
+    <a href="/">Home</a><br/>
+    <a href="/home">My FindFolks</a><br/>
+    <a href="/logout">Logout</a><br/>
 </body>
 </html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Join a Group</title>
+</head>
+<body>
+	{%if posts%}
+	<table class="generic-table events_table">
+        <th>Group ID</th>
+        <th>Name</th>
+        <th>Description</th>
+        
+        {% for line in posts %}
+        <tr>
+            <td>{{line.group_id}}</td>
+            <td>{{line.group_name}}</td>
+            <td>{{line.description}}</td>
+        </tr>
+        {% endfor %}
+        
+    </table>
+    {% endif %}
+    {%if not posts%}
+    <p>No groups in FindFolks at the moment...</p>
+    {% endif %}
+
+    <p>Add a group ID to join it!</p>
+    <form action="/joinGroupExec" method="POST">
+        <input type="text" name="group_id" placeholder="Group Id" required /><br>
+        <input type="submit" value="Join Group" />
+    </form>
+        {% if error %}
+        <p class="error">{{error}} </p>
+        {% endif %}
+    <a href="/">Home</a><br/>
+    <a href="/home">My FindFolks</a><br/>
+    <a href="/logout">Logout</a><br/>
+</body>
+</html>

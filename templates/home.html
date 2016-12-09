@@ -1,22 +1,86 @@
-﻿<!DOCTYPE html>
+﻿<!--For python code
+message - the user's name if is logged in
+
+line.title ### the event title
+line.date ### event date
+line.start_time ### event start time
+line.end_time ### event end time
+line.description ### event description
+line.location ### event location
+line.zipcode ### event zipcode
+
+-->
+<!DOCTYPE html>
 <html>
 <head>
-    <title>Create Event</title>
+    <title>FindFolks</title>
+    <style type="text/css">
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        td {
+            margin-right: 20px;
+        }
+    </style>
 </head>
 <body>
-    <p> Enter the details for the event you want to create here: </p>
-    <form action="/createEventAuth" method="POST">
-        <input type="number" name="group_id" placeholder="Group id" required />
-        <input type="text" name="title" placeholder="Event title" required />
-        <input type="text" name="description" placeholder="Description" required />
-        <input type="datetime-local" name="start_time" placeholder="Start time" required />
-        <input type="datetime-local" name="end_time" placeholder="End time" required />
-        <input type="text" name="location_name" placeholder="Location name" required />
-        <input type="text" name="zipcode" placeholder="Zipcode" required />
-        <input type="submit" value="Create" />
-    </form>
-    {% if error %}
-    <p class="error">Message: {{error}} </p>
+    <h1>Welcome to FindFolks!</h1>
+
+    {% if message %}
+    <h2>{{message}}, Here are all the upcomming events:</h2>
     {% endif %}
+
+    {% if not message %}
+    <h2>Upcomming events:</h2>
+    {% endif %}
+
+
+    <table class="generic-table events_table">
+        <th>Title</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+        <th>Description</th>
+        <th>Location</th> <!--location name-->
+        <th>Zipcode</th> <!--location zipcode-->
+        {%if posts%}
+        {% for line in posts %}
+        <tr>
+            <td>{{line.title}}</td>
+            <td>{{line.start_time}}</td>
+            <td>{{line.end_time}}</td>
+            <td>{{line.description}}</td>
+            <td>{{line.location_name}}</td>
+            <td>{{line.zipcode}}</td>
+        </tr>
+        {% endfor %}
+        {% endif %}
+    </table>
+    {%if errorUpcoming%}
+    <p>{{errorUpcoming}}</p>
+    {% endif %}
+    </div>
+
+
+
+    {% if message %}
+    <div>
+        <a href="/signup">View upcoming events</a><br/>
+        <a href="/avgRatings">Rate an event</a><br/>
+        <a href="/joinGroup">Join a Group</a><br/>
+        <a href="/friend">Add a Friend</a><br/>
+        <a href="/add-interest">Add an Interest</a><br/>
+        <a href="/top5">View Top 5 Events</a><br/>
+        <a href="/logout">Logout</a><br/>
+    </div>
+    {% endif %}
+    {% if not message %}
+    <div>
+        <h2>Login or register to find more Folks!</h2>
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+    </div>
+    {% endif %}
+
 </body>
 </html>
