@@ -1,5 +1,12 @@
 from flask import Flask, render_template, request, session, url_for, redirect
 import pymysql.cursors
+import hashlib
+
+def computeMD5hash(string):
+    m = hashlib.md5()
+    m.update(string.encode('utf-8'))
+    return m.hexdigest()
+
 
 app =Flask(__name__)
 app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
@@ -73,6 +80,7 @@ def loginAuth():
     username = request.form['username']
     password = request.form['password']
 
+    password = computeMD5hash(password)
     cursor = conn.cursor()
     query = 'SELECT * FROM member WHERE username = %s AND password = %s'
     cursor.execute(query,(username,password))
@@ -122,7 +130,7 @@ def registerAuth():
     interest = request.form['interest'] 
     keyword = request.form['keyword'] 
 
-
+    password = computeMD5hash(password)
     cursor = conn.cursor()
     query = 'SELECT * FROM member WHERE username = %s'
     cursor.execute(query,(username))
@@ -393,7 +401,16 @@ def friends_events():
 
 @app.route('/friend' , methods = ['GET', 'POST'])
 def friend():
-    return render_template('friend.html')
+    username = session['username']
+    cursor = conn.cursor() 
+    query = 'SELECT friend_to,an_event.event_id,title,description,start_time,end_time,location_name,zipcode FROM friend, sign_up, an_event WHERE friend.friend_to = sign_up.username AND sign_up.event_id = an_event.event_id AND friend_of = %s'
+    cursor.execute(query , (username))
+    data = cursor.fetchall()
+    error = None
+    if(data):
+        return render_template('friend.html' , message = username , posts = data)
+    else:
+        return render_template('friend.html' , message = username)
 
 @app.route('/friendAuth' , methods = ['GET', 'POST'])
 def friendAuth():
