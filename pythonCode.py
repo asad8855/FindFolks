@@ -15,7 +15,7 @@ app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 
 conn = pymysql.connect(host='localhost',
                        user='root',
-                       password='',
+                       password='root',
                        db='findfolks',
                        charset='utf8mb4',
                        cursorclass=pymysql.cursors.DictCursor)
@@ -43,8 +43,8 @@ def home():
     #events of past 3 days
     print(globUser)
     cursor = conn.cursor()
-    query = 'SELECT * FROM an_event WHERE start_time >= cast((now()) as date) AND start_time < cast((now() + interval 29 day) as date)'
-    cursor.execute(query)
+    query = 'SELECT * FROM an_event WHERE start_time >= cast((now()) as date) AND start_time < cast((now() + interval 29 day) as date) AND event_id IN (SELECT event_id FROM organize WHERE group_id IN (SELECT group_id FROM belongs_to WHERE belongs_to.username=%s))'
+    cursor.execute(query, (globUser))
     nextThreeDays = cursor.fetchall()
     cursor.close()
     error = None
@@ -217,8 +217,8 @@ def sign_up():
     username = session['username']
     cursor = conn.cursor()
     #search for events of groups user belongs to
-    search = 'SELECT * FROM an_event WHERE start_time >= cast((now()) as date) AND start_time < cast((now() + interval 29 day) as date)'
-    cursor.execute(search)
+    search = 'SELECT * FROM an_event WHERE start_time >= cast((now()) as date) AND start_time < cast((now() + interval 29 day) as date) AND event_id IN (SELECT event_id FROM organize WHERE group_id IN (SELECT group_id FROM belongs_to WHERE belongs_to.username=%s))'
+    cursor.execute(search, (username))
     data = cursor.fetchall()
     error = None
     if(data):
@@ -265,7 +265,8 @@ def searchByInterest():
     else:
         cursor = conn.cursor()
         #default table
-        search = 'SELECT an_event.event_id,title,description,start_time,end_time,location_name,zipcode FROM belongs_to,organize,an_event WHERE belongs_to.group_id = organize.group_id AND organize.event_id = an_event.event_id'
+        search = 'SELECT * FROM an_event WHERE start_time >= cast((now()) as date) AND start_time < cast((now() + interval 29 day) as date) AND event_id IN (SELECT event_id FROM organize WHERE group_id IN (SELECT group_id FROM belongs_to WHERE belongs_to.username=%s))'
+        cursor.execute(query,(username))
         data = cursor.fetchall()
         cursor.close()
         error = "There are currently no events that share an interest with you"
@@ -278,10 +279,9 @@ def insertSignup():
      event_id = request.form['event_id']
      cursor = conn.cursor()
      #default table
-     search = 'SELECT * FROM an_event WHERE start_time >= cast((now()) as date) AND start_time < cast((now() + interval 29 day) as date)'
-     cursor.execute(search)
+     search = 'SELECT * FROM an_event WHERE start_time >= cast((now()) as date) AND start_time < cast((now() + interval 29 day) as date) AND event_id IN (SELECT event_id FROM organize WHERE group_id IN (SELECT group_id FROM belongs_to WHERE belongs_to.username=%s))'
+     cursor.execute(search,(username))
      events = cursor.fetchall()
-
      query = 'SELECT * FROM sign_up WHERE event_id = %s AND username = %s'
      cursor.execute(query,(event_id , username))
      data = cursor.fetchone()
@@ -440,7 +440,7 @@ def friendsEvents():
 def friend():
     username = session['username']
     cursor = conn.cursor() 
-    query = 'SELECT friend.friend_of, member.firstname , member.lastname, member.email from friend, member WHERE friend_to = username AND friend_of = %s '
+    query = 'SELECT * from friend, member WHERE username = friend_of AND friend_of = %s'
     cursor.execute(query , (username))
     data = cursor.fetchall()
     if(data):
@@ -455,10 +455,11 @@ def friendAuth():
     query = 'SELECT friend_of from friend WHERE friend_to = %s AND friend_of = %s'
     cursor.execute(query , (friend_username,username))
     exists = cursor.fetchone()
-    query = 'SELECT * from friend, member WHERE friend_to = username AND friend_of = %s '
-    cursor.execute(query , (username))
+    friendsQuery = 'SELECT * from friend, member WHERE username = friend_of AND friend_of = %s'
+    cursor.execute(friendsQuery , (username))
     data = cursor.fetchall()
-    query = 'SELECT username from friend WHERE friend_of = %s'
+    if friend_username == username:
+        return render_template('friend.html',posts = data, error = "You can't friend yourself" )
     if(exists):
         return render_template('friend.html',posts = data, error = "This person is in your friends list already!" )
     else:
@@ -466,8 +467,10 @@ def friendAuth():
         cursor.execute(query , (friend_username))
         exists_member = cursor.fetchone()
         if(exists_member):
-            ins = 'INSERT INTO friend VALUES (%s,%s)' 
+            ins = 'INSERT INTO friend (friend_of,friend_to) VALUES (%s,%s)' 
             cursor.execute(ins , (username, friend_username))
+            cursor.execute(friendsQuery , (username))
+            data = cursor.fetchall()
             conn.commit()
             cursor.close()
             return render_template('friend.html',posts = data, error = "Successfully added friend!" )
@@ -483,13 +486,14 @@ def joinGroup():
         groups = cursor.fetchall()
         cursor.close()
         if(groups):
-            return render_template('joinGroup.html' , posts = groups)
+            return render_template('join-group.html' , posts = groups)
         else:
-            return render_template('joinGroup.html' , error = "No groups in FindFolks")
+            return render_template('join-group.html' , error = "No groups in FindFolks")
 #join group 
 @app.route('/joinGroupExec' , methods=['GET', 'POST'])
 def joinGroupExec():
     #grab information from joing-group page
+    username = session['username']
     group_id = request.form['group_id']
     cursor = conn.cursor()
     query = 'SELECT * FROM a_group WHERE group_id = %s'
@@ -500,13 +504,22 @@ def joinGroupExec():
     query = 'SELECT * FROM a_group'
     cursor.execute(query)
     groups = cursor.fetchall()
-    cursor.close()
     if(data):
-        error = "You successfully joined the group!"
-        return render_template('joinGroup.html', posts = groups ,error = error)
+        query = 'SELECT * FROM belongs_to WHERE username = %s AND group_id = %s'
+        cursor.execute(query, (username,group_id))
+        already_signed = cursor.fetchone()
+        if(already_signed):
+            return render_template('join-group.html', posts = groups ,error = "you are already in this group")
+        else:
+            query = 'INSERT into belongs_to VALUES(%s,%s,0)'
+            cursor.execute(query, (group_id,username))
+            conn.commit()
+            error = "You successfully joined the group!"
+            cursor.close()
+            return render_template('join-group.html', posts = groups ,error = error)
     else:
         error = "This group Id does not exist, try another one!"
-        return render_template('joinGroup.html', posts = groups ,error = error)
+        return render_template('join-group.html', posts = groups ,error = error)
 
 @app.route('/add-interest' , methods=['GET', 'POST'])
 def addInterest():
