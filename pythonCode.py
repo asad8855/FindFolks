@@ -15,7 +15,7 @@ app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 
 conn = pymysql.connect(host='localhost',
                        user='root',
-                       password='root',
+                       password='',
                        db='findfolks',
                        charset='utf8mb4',
                        cursorclass=pymysql.cursors.DictCursor)
@@ -191,9 +191,6 @@ def registerAuth():
             return render_template('login.html')
         
         
-
-
-
 
 #USE CASE 3
 @app.route('/viewUpcomingEvents' ,  methods=['GET', 'POST'])
@@ -440,7 +437,7 @@ def friendsEvents():
 def friend():
     username = session['username']
     cursor = conn.cursor() 
-    query = 'SELECT * from friend, member WHERE username = friend_of AND friend_of = %s'
+    query = 'SELECT friend_to , firstname, lastname, email from friend, member WHERE friend.friend_to = member.username AND friend_of = %s'
     cursor.execute(query , (username))
     data = cursor.fetchall()
     if(data):
@@ -455,13 +452,13 @@ def friendAuth():
     query = 'SELECT friend_of from friend WHERE friend_to = %s AND friend_of = %s'
     cursor.execute(query , (friend_username,username))
     exists = cursor.fetchone()
-    friendsQuery = 'SELECT * from friend, member WHERE username = friend_of AND friend_of = %s'
+    friendsQuery = 'SELECT friend_to , firstname, lastname, email from friend, member WHERE friend.friend_to = member.username AND friend_of = %s'
     cursor.execute(friendsQuery , (username))
     data = cursor.fetchall()
     if friend_username == username:
-        return render_template('friend.html',posts = data, error = "You can't friend yourself" )
+        return render_template('friend.html',posts = data, message = username, error = "You can't friend yourself" )
     if(exists):
-        return render_template('friend.html',posts = data, error = "This person is in your friends list already!" )
+        return render_template('friend.html',posts = data, message = username, error = "This person is in your friends list already!" )
     else:
         query = 'SELECT * from member WHERE username = %s'
         cursor.execute(query , (friend_username))
@@ -469,13 +466,13 @@ def friendAuth():
         if(exists_member):
             ins = 'INSERT INTO friend (friend_of,friend_to) VALUES (%s,%s)' 
             cursor.execute(ins , (username, friend_username))
+            conn.commit()
             cursor.execute(friendsQuery , (username))
             data = cursor.fetchall()
-            conn.commit()
             cursor.close()
-            return render_template('friend.html',posts = data, error = "Successfully added friend!" )
+            return render_template('friend.html', message = username, posts = data, error = "Successfully added friend!" )
         else:
-            return render_template('friend.html',posts = data, error = "There is no such member in findFolks" )
+            return render_template('friend.html',posts = data,message = username, error = "There is no such member in findFolks" )
 
 #Define route for join group
 @app.route('/joinGroup' , methods=['GET', 'POST'])
@@ -486,9 +483,9 @@ def joinGroup():
         groups = cursor.fetchall()
         cursor.close()
         if(groups):
-            return render_template('join-group.html' , posts = groups)
+            return render_template('joinGroup.html' , posts = groups)
         else:
-            return render_template('join-group.html' , error = "No groups in FindFolks")
+            return render_template('joinGroup.html' , error = "No groups in FindFolks")
 #join group 
 @app.route('/joinGroupExec' , methods=['GET', 'POST'])
 def joinGroupExec():
@@ -509,17 +506,17 @@ def joinGroupExec():
         cursor.execute(query, (username,group_id))
         already_signed = cursor.fetchone()
         if(already_signed):
-            return render_template('join-group.html', posts = groups ,error = "you are already in this group")
+            return render_template('joinGroup.html', posts = groups ,error = "you are already in this group")
         else:
             query = 'INSERT into belongs_to VALUES(%s,%s,0)'
             cursor.execute(query, (group_id,username))
             conn.commit()
             error = "You successfully joined the group!"
             cursor.close()
-            return render_template('join-group.html', posts = groups ,error = error)
+            return render_template('joinGroup.html', posts = groups ,error = error)
     else:
         error = "This group Id does not exist, try another one!"
-        return render_template('join-group.html', posts = groups ,error = error)
+        return render_template('joinGroup.html', posts = groups ,error = error)
 
 @app.route('/add-interest' , methods=['GET', 'POST'])
 def addInterest():
@@ -532,19 +529,40 @@ def insertInterest():
     interest = request.form['category']
     keyword = request.form['keyword'] 
     cursor = conn.cursor()
-    query = "SELECT * FROM interested_in WHERE category = %s AND keyword = %s AND username = %s"
-    cursor.execute(query,(interest,keyword, username))
-    exists = cursor.fetchone()
-    if(exists):
-        #cursor.close()
-        return render_template('add-interest.html', error="you are already interested in that!" )
+    query = 'SELECT * FROM interest WHERE category = %s AND keyword = %s'
+    cursor.execute(query,(interest,keyword))
+    check = cursor.fetchone()
+    error = None
+    if(check):
+        query = "SELECT * FROM interested_in WHERE category = %s AND keyword = %s AND username = %s"
+        cursor.execute(query,(interest,keyword, username))
+        exists = cursor.fetchone()
+        if(exists):
+            #cursor.close()
+            return render_template('add-interest.html', error="you are already interested in that!" )
+        else:
+            ins = 'INSERT INTO interested_in (username,category,keyword) VALUES (%s,%s,%s)'
+            cursor.execute(ins , (username,interest,keyword))
+            conn.commit()
+            cursor.close()
+            return render_template('add-interest.html', error="successfully added interest" )
     else:
-        ins = 'INSERT INTO interested_in (username,category,keyword) VALUES (%s,%s,%s)'
-        cursor.execute(ins , (username,interest,keyword))
-        conn.commit()
-        cursor.close()
-        return render_template('add-interest.html', error="successfully added interest" )
-        
+       error = "That interest doesn't exist"
+       return render_template('add-interest.html' , error = error)
+
+@app.route('/top5' )
+def topFive():
+    cursor = conn.cursor()
+    query = 'SELECT sign_up.event_id ,avg(rating) as average_rating , title , start_time, end_time, description, location_name, zipcode FROM sign_up, an_event WHERE an_event.event_id = sign_up.event_id GROUP BY sign_up.event_id ORDER BY avg(rating) DESC LIMIT 5'
+    cursor.execute(query)
+    cursor.close()
+    data = cursor.fetchall()
+    Error = None;
+    if(data):
+        return render_template('top5.html' , posts = data)
+    else:
+        Error = "No events have been rated at the moment"
+        return render_template('top5.html' , errorUpcoming = Error)
 
 @app.route('/logout')
 def logout():
