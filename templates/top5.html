@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Top 5 Events</title>
-	 <style type="text/css">
+    <title>Top 5 Events</title>
+    <style type="text/css">
         table, th, td {
             border: 1px solid black;
         }
@@ -13,7 +13,9 @@
     </style>
 </head>
 <body>
-	 <table class="generic-table events_table">
+    <table class="generic-table events_table">
+        <th>Event_id</th>
+        <th>AVerage Rating</th>
         <th>Title</th>
         <th>Start Time</th>
         <th>End Time</th>
@@ -23,6 +25,8 @@
         {%if posts%}
         {% for line in posts %}
         <tr>
+            <td>{{line.event_id}}</td>
+            <td>{{line.average_rating}}</td>
             <td>{{line.title}}</td>
             <td>{{line.start_time}}</td>
             <td>{{line.end_time}}</td>
