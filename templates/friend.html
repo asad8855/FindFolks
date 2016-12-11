@@ -24,8 +24,8 @@
         {% for line in posts %}
         <tr>
             <td>{{line.friend_to}}</td>
-            <td>{{line.first_name}}</td>
-            <td>{{line.last_name}}</td>
+            <td>{{line.firstname}}</td>
+            <td>{{line.lastname}}</td>
             <td>{{line.email}}</td>
         </tr>
         {% endfor %}
@@ -44,8 +44,8 @@
     {% if error %}
     <p class="error">{{error}} </p>
     {% endif %}
-    <a href="/">Home</a><br/>
-    <a href="/home">My FindFolks</a><br/>
-    <a href="/logout">Logout</a><br/>
+    <a href="/">Home</a><br />
+    <a href="/home">My FindFolks</a><br />
+    <a href="/logout">Logout</a><br />
 </body>
 </html>
