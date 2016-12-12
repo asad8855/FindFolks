@@ -98,7 +98,7 @@ def loginAuth():
     username = request.form['username']
     password = request.form['password']
 
-    #password = computeMD5hash(password)
+    password = computeMD5hash(password)
     cursor = conn.cursor()
     query = 'SELECT * FROM member WHERE username = %s AND password = %s'
     cursor.execute(query,(username,password))
