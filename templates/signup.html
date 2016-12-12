@@ -18,11 +18,6 @@
     {%if signupMessage%}
     <p>{{signupMessage}}</p>
     {% endif %}
-    <p>Search events by name:</p>
-    <form action="/searchByName" method="POST">
-        <input type="text" name="eventName" placeholder="type an event's name here" required />
-        <input type="submit" value="Search" />
-    </form>
     <p><a href="/searchByInterest">Click here</a> to view events that match your interests!</p>
     <p><a href="/friends-events">Click here</a> to view events that your friends signed up for!</p>
     {%if posts%}

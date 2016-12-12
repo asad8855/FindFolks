@@ -15,7 +15,7 @@ app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 
 conn = pymysql.connect(host='localhost',
                        user='root',
-                       password='',
+                       password='root',
                        db='findfolks',
                        charset='utf8mb4',
                        cursorclass=pymysql.cursors.DictCursor)
@@ -308,7 +308,7 @@ def insertSignup():
             return render_template('signup.html' ,  signupMessage = note, posts = events)
 
  #USE CASE 6
-@app.route('/create_event' , methods = ['GET', 'POST'])
+@app.route('/create-event' , methods = ['GET', 'POST'])
 def create_event():
         return render_template('create_event.html')
         
